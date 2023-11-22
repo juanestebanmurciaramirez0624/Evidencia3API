@@ -13,36 +13,74 @@ const router = express.Router()
 
 router.get(('/'),
         async (req, res) => {
-            const reviews = 
-                await Reviews.find()
-            return  res.json({
-                success: true,
-                data: reviews
-            })
+            const reviews = await Reviews.find()
+            if(reviews.length > 0){
+                res.status(200).json({
+                    success: true,
+                    data: reviews
+                })
+            }else{
+                res.status(404).json({
+                    success: false,
+                    msg: "No existen reviews"
+                })
+            }    
         })
 
 
 //SELECCIONAR POR ID
 
 router.get(('/:id'),
-        (req, res) => {
-         bootcapmId =   req.params.id    
-            return res.json(
-            {
-                success: true,
-                msg: `Seleccionando los reviews | cuyo id es ${bootcapmId}`
+        async(req, res) => {
+          const reviewsId =  req.params.id    
+          try {
+            if(!mongoose.Types.ObjectId.isValid(bootcapmId)){
+                return res.status(404).json({
+                    success: false,
+                    msg: "reviews no encotrado"
+                })
+            } else{
+                //Traerlo por id
+                const reviews = await Reviews.findById(reviewsId)
+                if (!reviews){
+                    res.status(404).json({
+                        success: false,
+                        msg: "reviews no encotrado"
+                    })
+                } else {
+                        
+                }
+                return res.json({
+                    success: true,
+                    data: reviews
+                })
             }
-            )
+
+         } catch (error) {
+            res.status(500).json({
+                success: false,
+                msg: `Error encontrado ${error.message}`
+            })
+         } 
         })
 
 
 //CREAAAAAAAR
 router.post(('/'),
-        (req, res) => {
-        return  res.json({
-        success: true,
-        msg: "Crear reviews"
-    })
+        async (req, res) => {
+            try {
+                const newReview =  await Reviews.create(req.body)
+                return  res.json({
+                success: true,
+                data: newReview
+            })
+            } catch (error) {
+                res.status(500).json({
+                    success: false,
+                    msg: `Error encontrado: ${error.message}`
+                  })
+            }
+     
 })
 
 
@@ -51,12 +89,18 @@ router.post(('/'),
 //ACTUALIZAAAAAAR
 
 router.put(('/:id'),
-        (req, res) => {
-         bootcapmId =   req.params.id    
+        async (req, res) => {
+            const reviewId = req.params.id  
+            updReview = await Reviews.findByIdAndUpdate(
+                reviewId,
+                req.body,{ 
+                    new: true
+                }
+             )
             return res.json(
             {
                 success: true,
-                msg: `Actualizando los reviews | cuyo id es ${bootcapmId}`
+                data: updReview
             }
             )
         })
@@ -65,14 +109,14 @@ router.put(('/:id'),
 //ELIMINAAAAAR
 
 router.delete(('/:id'),
-        (req, res) => {
-         bootcapmId =   req.params.id    
+        async (req, res) => {
+         const reviewId =   req.params.id   
+         await Reviews.findByIdAndDelete(reviewId)
             return res.json(
             {
                 success: true,
-                msg: `Eliminando los reviews | cuyo id es ${bootcapmId}`
-            }
-            )
+                data: []
+            })
         })
         
         
